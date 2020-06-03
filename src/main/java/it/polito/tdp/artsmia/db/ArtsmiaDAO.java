@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import it.polito.tdp.artsmia.model.ArtObject;
+import it.polito.tdp.artsmia.model.Collegamento;
 
 public class ArtsmiaDAO {
 
@@ -31,6 +33,34 @@ public class ArtsmiaDAO {
 			}
 			conn.close();
 			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	
+	public List<Collegamento> getCollegamenti(Map<Integer,ArtObject> idMap){
+		String sql="SELECT eo.object_id AS a1, eo2.object_id AS a2, COUNT(DISTINCT e.exhibition_id) AS peso "+
+				"FROM exhibitions e join exhibition_objects eo JOIN exhibition_objects eo2 "+
+				"WHERE e.exhibition_id=eo.exhibition_id && eo2.exhibition_id=e.exhibition_id && eo2.object_id!=eo.object_id "+
+				"GROUP BY eo.object_id, eo2.object_id";
+		
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			List<Collegamento> result=new ArrayList();
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				Collegamento c=new Collegamento(idMap.get(res.getInt("a1")),idMap.get(res.getInt("a2")),res.getInt("peso"));
+				result.add(c);
+				
+			}
+			conn.close();
+			return result ;
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
